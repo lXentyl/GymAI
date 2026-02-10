@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import StatCard from "@/components/stat-card";
+import Reveal from "@/components/reveal";
 import {
   Flame,
   Dumbbell,
@@ -102,121 +103,133 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="space-y-1">
-        <p className="text-sm text-muted-foreground">{greeting}</p>
-        <h1 className="text-2xl font-bold tracking-tight">{firstName} 👋</h1>
-      </div>
+      <Reveal delay={0}>
+        <div className="space-y-1">
+          <p className="text-sm text-muted-foreground">{greeting}</p>
+          <h1 className="text-2xl font-bold tracking-tight">{firstName} 👋</h1>
+        </div>
+      </Reveal>
 
       {/* Streak Card */}
-      <Card className="border-border/50 bg-gradient-to-br from-card to-card/50 overflow-hidden relative">
-        <CardContent className="p-5">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-                Current Streak
-              </p>
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-black tabular-nums">
-                  {profile?.current_streak || 0}
-                </span>
-                <span className="text-lg text-muted-foreground">days</span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Best: {profile?.longest_streak || 0} days
-              </p>
-            </div>
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-foreground/5">
-              <Flame className="h-8 w-8 text-orange-400" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Start Workout CTA */}
-      <Link href="/workouts">
-        <Card className="border-border/50 bg-foreground text-background hover:bg-foreground/90 transition-all cursor-pointer group">
+      <Reveal delay={0.1}>
+        <Card className="border-border/50 bg-gradient-to-br from-card to-card/50 overflow-hidden relative">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-background/10">
-                  <Dumbbell className="h-6 w-6" />
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                  Current Streak
+                </p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-black tabular-nums">
+                    {profile?.current_streak || 0}
+                  </span>
+                  <span className="text-lg text-muted-foreground">days</span>
                 </div>
-                <div>
-                  <p className="font-bold text-lg">Start Workout</p>
-                  <p className="text-xs opacity-70">
-                    AI-generated based on your goals
-                  </p>
-                </div>
+                <p className="text-xs text-muted-foreground">
+                  Best: {profile?.longest_streak || 0} days
+                </p>
               </div>
-              <ChevronRight className="h-5 w-5 opacity-50 group-hover:translate-x-1 transition-transform" />
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-foreground/5">
+                <Flame className="h-8 w-8 text-orange-400" />
+              </div>
             </div>
           </CardContent>
         </Card>
-      </Link>
+      </Reveal>
+
+      {/* Start Workout CTA */}
+      <Reveal delay={0.2}>
+        <Link href="/workouts">
+          <Card className="border-border/50 bg-foreground text-background hover:bg-foreground/90 transition-all cursor-pointer group">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-background/10">
+                    <Dumbbell className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-lg">Start Workout</p>
+                    <p className="text-xs opacity-70">
+                      AI-generated based on your goals
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="h-5 w-5 opacity-50 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      </Reveal>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3">
-        <StatCard
-          icon={TrendingUp}
-          label="This Week"
-          value="0"
-          subtitle="workouts"
-        />
-        <StatCard
-          icon={Zap}
-          label="Goal"
-          value={profile?.goal?.replace("_", " ") || "Not set"}
-          subtitle={profile?.body_type || ""}
-        />
-      </div>
+      <Reveal delay={0.3}>
+        <div className="grid grid-cols-2 gap-3">
+          <StatCard
+            icon={TrendingUp}
+            label="This Week"
+            value="0"
+            subtitle="workouts"
+          />
+          <StatCard
+            icon={Zap}
+            label="Goal"
+            value={profile?.goal?.replace("_", " ") || "Not set"}
+            subtitle={profile?.body_type || ""}
+          />
+        </div>
+      </Reveal>
 
       {/* Water Tracker */}
-      <Card className="border-border/50 bg-card/50">
-        <CardContent className="p-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Droplets className="h-5 w-5 text-blue-400" />
-              <span className="font-semibold">Hydration</span>
+      <Reveal delay={0.35}>
+        <Card className="border-border/50 bg-card/50">
+          <CardContent className="p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Droplets className="h-5 w-5 text-blue-400" />
+                <span className="font-semibold">Hydration</span>
+              </div>
+              <span className="text-sm text-muted-foreground">
+                {waterMl}ml / {waterTarget}ml
+              </span>
             </div>
-            <span className="text-sm text-muted-foreground">
-              {waterMl}ml / {waterTarget}ml
-            </span>
-          </div>
-          <Progress
-            value={Math.min((waterMl / waterTarget) * 100, 100)}
-            className="h-2"
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full h-10"
-            onClick={addWater}
-          >
-            <Droplets className="h-4 w-4 mr-2" />
-            Add Glass (250ml)
-          </Button>
-        </CardContent>
-      </Card>
+            <Progress
+              value={Math.min((waterMl / waterTarget) * 100, 100)}
+              className="h-2"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full h-10"
+              onClick={addWater}
+            >
+              <Droplets className="h-4 w-4 mr-2" />
+              Add Glass (250ml)
+            </Button>
+          </CardContent>
+        </Card>
+      </Reveal>
 
       {/* Quick Links */}
-      <div className="grid grid-cols-2 gap-3">
-        <Link href="/nutrition">
-          <Card className="border-border/50 bg-card/50 hover:bg-card/80 transition-all cursor-pointer">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl mb-1">🥗</p>
-              <p className="text-xs font-medium">Nutrition</p>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href="/calendar">
-          <Card className="border-border/50 bg-card/50 hover:bg-card/80 transition-all cursor-pointer">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl mb-1">📅</p>
-              <p className="text-xs font-medium">Calendar</p>
-            </CardContent>
-          </Card>
-        </Link>
-      </div>
+      <Reveal delay={0.4}>
+        <div className="grid grid-cols-2 gap-3">
+          <Link href="/nutrition">
+            <Card className="border-border/50 bg-card/50 hover:bg-card/80 transition-all cursor-pointer">
+              <CardContent className="p-4 text-center">
+                <p className="text-2xl mb-1">🥗</p>
+                <p className="text-xs font-medium">Nutrition</p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/calendar">
+            <Card className="border-border/50 bg-card/50 hover:bg-card/80 transition-all cursor-pointer">
+              <CardContent className="p-4 text-center">
+                <p className="text-2xl mb-1">📅</p>
+                <p className="text-xs font-medium">Calendar</p>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+      </Reveal>
     </div>
   );
 }
