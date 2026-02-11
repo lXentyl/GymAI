@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button";
 import Reveal from "@/components/reveal";
 import { SkeletonPage } from "@/components/skeleton-card";
 import { MotionCard } from "@/components/motion-primitives";
+import ConditionCheck from "@/components/condition-check";
 import { useTranslation } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings-store";
 import { formatWeight } from "@/lib/unit-converter";
-import { Dumbbell, Loader2, ChevronRight } from "lucide-react";
+import { Dumbbell, Loader2, ChevronRight, Sparkles } from "lucide-react";
 import { type Profile, type Exercise, type WorkoutPlan } from "@/lib/types";
 import { generateWorkout, getDayMuscleGroups } from "@/lib/ai-trainer";
+import { adaptWorkout, type UserCondition } from "@/app/actions/ai";
 import { toast } from "sonner";
 
 export default function WorkoutsPage() {
@@ -22,6 +24,7 @@ export default function WorkoutsPage() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [dayOfWeek, setDayOfWeek] = useState(0);
+  const [showConditionCheck, setShowConditionCheck] = useState(false);
   const { t } = useTranslation();
   const units = useSettings((s) => s.units);
 
@@ -56,15 +59,25 @@ export default function WorkoutsPage() {
     setLoading(false);
   };
 
-  const handleGenerate = async () => {
+  const handleGenerateClick = () => {
     if (!profile || exercises.length === 0) return;
+    setShowConditionCheck(true);
+  };
+
+  const handleConditionSelect = async (
+    condition: UserCondition,
+    injuryDescription?: string
+  ) => {
+    if (!profile || exercises.length === 0) return;
+    setShowConditionCheck(false);
     setGenerating(true);
 
     const muscleGroups = getDayMuscleGroups("push_pull_legs", dayOfWeek);
     const goal = profile.goal || "hypertrophy";
     const userEquipment = profile.equipment || ["bodyweight"];
 
-    const workout = generateWorkout(
+    // Generate the base workout locally
+    const baseWorkout = generateWorkout(
       exercises,
       userEquipment,
       goal,
@@ -72,21 +85,51 @@ export default function WorkoutsPage() {
       2
     );
 
+    const baseExercises = baseWorkout.map((w) => ({
+      exercise_id: w.exercise.id,
+      name: w.exercise.name,
+      sets: w.sets,
+      reps: w.reps,
+      rest_seconds: w.rest,
+      equipment: w.exercise.equipment_required,
+      muscle_group: w.exercise.muscle_group,
+    }));
+
+    let finalExercises = baseExercises;
+    let adaptMessage = "";
+
+    // If condition is not "great", adapt with AI
+    if (condition !== "great") {
+      const result = await adaptWorkout(condition, baseExercises, injuryDescription);
+
+      if (result.success) {
+        finalExercises = result.data.exercises.map((ex) => ({
+          exercise_id: "",
+          name: ex.name,
+          sets: ex.sets,
+          reps: ex.reps,
+          rest_seconds: ex.rest_seconds,
+          equipment: ex.equipment,
+          muscle_group: ex.muscle_group,
+        }));
+        adaptMessage = result.data.message;
+      } else {
+        // Fallback to standard workout if AI fails
+        toast.error(result.error);
+      }
+    }
+
     // Save to DB
     const supabase = createClient();
+    const planName = condition === "great"
+      ? `${muscleGroups.join(" / ")} Day`
+      : `${muscleGroups.join(" / ")} Day (${condition.replace("_", " ")})`;
+
     const plan = {
       user_id: profile.id,
-      name: `${muscleGroups.join(" / ")} Day`,
+      name: planName,
       split_type: "push_pull_legs" as const,
-      exercises: workout.map((w) => ({
-        exercise_id: w.exercise.id,
-        name: w.exercise.name,
-        sets: w.sets,
-        reps: w.reps,
-        rest_seconds: w.rest,
-        equipment: w.exercise.equipment_required,
-        muscle_group: w.exercise.muscle_group,
-      })),
+      exercises: finalExercises,
     };
 
     const { data } = await supabase
@@ -97,7 +140,9 @@ export default function WorkoutsPage() {
 
     if (data) {
       setCurrentPlan(data);
-      toast.success(t("toast.workoutGenerated"));
+      toast.success(
+        adaptMessage || t("toast.workoutGenerated")
+      );
     }
     setGenerating(false);
   };
@@ -107,129 +152,155 @@ export default function WorkoutsPage() {
   if (loading) return <SkeletonPage />;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <Reveal delay={0}>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              {t("workouts.title")}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {t("workouts.subtitle")}
-            </p>
-          </div>
-          <Button
-            onClick={handleGenerate}
-            disabled={generating || exercises.length === 0}
-            size="sm"
-            className="gap-1"
-          >
-            {generating ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Dumbbell className="h-4 w-4" />
-            )}
-            {t("workouts.generate")}
-          </Button>
-        </div>
-      </Reveal>
+    <>
+      <ConditionCheck
+        open={showConditionCheck}
+        onClose={() => setShowConditionCheck(false)}
+        onSelect={handleConditionSelect}
+      />
 
-      {/* Today's Focus */}
-      <Reveal delay={0.1}>
-        <Card className="border-border/50 bg-card/50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="h-2 w-2 rounded-full bg-emerald-400" />
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-                {t("workouts.todaysFocus")}
+      <div className="space-y-6">
+        {/* Header */}
+        <Reveal delay={0}>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">
+                {t("workouts.title")}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {t("workouts.subtitle")}
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {todayMuscles.map((mg) => (
-                <span
-                  key={mg}
-                  className="rounded-full bg-foreground/10 px-3 py-1 text-xs font-medium capitalize"
-                >
-                  {mg}
-                </span>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </Reveal>
-
-      {/* Current Workout Plan */}
-      {currentPlan && currentPlan.exercises ? (
-        <Reveal delay={0.2}>
-          <div className="space-y-3">
-            <p className="text-sm font-semibold">{currentPlan.name}</p>
-            {(currentPlan.exercises as Array<{
-              exercise_id: string;
-              name: string;
-              sets: number;
-              reps: number;
-              rest_seconds: number;
-              equipment: string;
-              muscle_group: string;
-            }>).map((ex, i) => (
-              <MotionCard key={i} glow>
-                <Card className="border-border/50 bg-card/50">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-semibold text-sm">{ex.name}</p>
-                        <p className="text-xs text-muted-foreground capitalize">
-                          {ex.muscle_group} • {ex.equipment}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold tabular-nums">
-                          {ex.sets} × {ex.reps}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {ex.rest_seconds}s {t("workouts.rest")}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </MotionCard>
-            ))}
+            <Button
+              onClick={handleGenerateClick}
+              disabled={generating || exercises.length === 0}
+              size="sm"
+              className="gap-1"
+            >
+              {generating ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t("workout.adapting")}
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  {t("workouts.generate")}
+                </>
+              )}
+            </Button>
           </div>
         </Reveal>
-      ) : (
-        <Reveal delay={0.2}>
-          <MotionCard glow>
-            <Card className="border-border/50 bg-card/50 border-dashed">
-              <CardContent className="p-10 text-center space-y-4">
-                <div className="flex h-16 w-16 mx-auto items-center justify-center rounded-2xl bg-foreground/5">
-                  <Dumbbell className="h-8 w-8 text-muted-foreground animate-pulse" />
-                </div>
-                <div className="space-y-1">
-                  <p className="font-semibold text-lg">{t("workouts.noWorkouts")}</p>
-                  <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                    {t("workouts.noWorkouts.sub")}
-                  </p>
-                </div>
-                <Button
-                  onClick={handleGenerate}
-                  disabled={generating || exercises.length === 0}
-                  size="lg"
-                  className="mt-2 gap-2"
-                >
-                  {generating ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Dumbbell className="h-4 w-4" />
-                  )}
-                  {t("workouts.generateWorkout")}
-                </Button>
-              </CardContent>
-            </Card>
-          </MotionCard>
+
+        {/* Today's Focus */}
+        <Reveal delay={0.1}>
+          <Card className="border-border/50 bg-card/50">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-2 w-2 rounded-full bg-emerald-400" />
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                  {t("workouts.todaysFocus")}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {todayMuscles.map((mg) => (
+                  <span
+                    key={mg}
+                    className="rounded-full bg-foreground/10 px-3 py-1 text-xs font-medium capitalize"
+                  >
+                    {mg}
+                  </span>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </Reveal>
-      )}
-    </div>
+
+        {/* Current Workout Plan */}
+        {currentPlan && currentPlan.exercises ? (
+          <Reveal delay={0.2}>
+            <div className="space-y-3">
+              <p className="text-sm font-semibold">{currentPlan.name}</p>
+              {(currentPlan.exercises as Array<{
+                exercise_id?: string;
+                name: string;
+                sets: number;
+                reps: number;
+                rest_seconds: number;
+                equipment: string;
+                muscle_group: string;
+                is_superset_with?: string | null;
+                note?: string | null;
+              }>).map((ex, i) => (
+                <MotionCard key={i} glow>
+                  <Card className="border-border/50 bg-card/50">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-sm">{ex.name}</p>
+                          <p className="text-xs text-muted-foreground capitalize">
+                            {ex.muscle_group} • {ex.equipment}
+                          </p>
+                          {ex.is_superset_with && (
+                            <p className="text-xs text-violet-400 mt-0.5">
+                              ⚡ Superset with {ex.is_superset_with}
+                            </p>
+                          )}
+                          {ex.note && (
+                            <p className="text-xs text-amber-400 mt-0.5">
+                              💡 {ex.note}
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold tabular-nums">
+                            {ex.sets} × {ex.reps}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {ex.rest_seconds}s {t("workouts.rest")}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </MotionCard>
+              ))}
+            </div>
+          </Reveal>
+        ) : (
+          <Reveal delay={0.2}>
+            <MotionCard glow>
+              <Card className="border-border/50 bg-card/50 border-dashed">
+                <CardContent className="p-10 text-center space-y-4">
+                  <div className="flex h-16 w-16 mx-auto items-center justify-center rounded-2xl bg-foreground/5">
+                    <Dumbbell className="h-8 w-8 text-muted-foreground animate-pulse" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-semibold text-lg">{t("workouts.noWorkouts")}</p>
+                    <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                      {t("workouts.noWorkouts.sub")}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleGenerateClick}
+                    disabled={generating || exercises.length === 0}
+                    size="lg"
+                    className="mt-2 gap-2"
+                  >
+                    {generating ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4" />
+                    )}
+                    {t("workouts.generateWorkout")}
+                  </Button>
+                </CardContent>
+              </Card>
+            </MotionCard>
+          </Reveal>
+        )}
+      </div>
+    </>
   );
 }
+

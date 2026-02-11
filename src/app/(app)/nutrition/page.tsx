@@ -5,12 +5,12 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import Reveal from "@/components/reveal";
 import { SkeletonPage } from "@/components/skeleton-card";
+import MealAnalyzer from "@/components/meal-analyzer";
 import { useTranslation } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings-store";
 import { formatWater } from "@/lib/unit-converter";
@@ -36,7 +36,6 @@ export default function NutritionPage() {
   const [newSupName, setNewSupName] = useState("");
   const [newSupDosage, setNewSupDosage] = useState("");
   const [loading, setLoading] = useState(true);
-  const [calories, setCalories] = useState("");
   const { t } = useTranslation();
   const units = useSettings((s) => s.units);
 
@@ -70,7 +69,6 @@ export default function NutritionPage() {
     if (profileRes.data) setProfile(profileRes.data);
     if (statsRes.data) {
       setDailyStats(statsRes.data);
-      setCalories(statsRes.data.calories?.toString() || "");
     }
     if (supRes.data) setSupplements(supRes.data);
     if (supLogRes.data) {
@@ -84,7 +82,12 @@ export default function NutritionPage() {
     setLoading(false);
   };
 
-  const logCalories = async () => {
+  const saveMealData = async (data: {
+    calories: number;
+    protein_g: number;
+    carbs_g: number;
+    fat_g: number;
+  }) => {
     const supabase = createClient();
     const {
       data: { user },
@@ -92,14 +95,34 @@ export default function NutritionPage() {
     if (!user) return;
 
     const today = new Date().toISOString().split("T")[0];
+    const newCalories = (dailyStats?.calories || 0) + data.calories;
+    const newProtein = (dailyStats?.protein_g || 0) + data.protein_g;
+    const newCarbs = (dailyStats?.carbs_g || 0) + data.carbs_g;
+    const newFat = (dailyStats?.fat_g || 0) + data.fat_g;
+
     await supabase.from("daily_stats").upsert(
       {
         user_id: user.id,
         date: today,
-        calories: parseFloat(calories) || 0,
+        calories: newCalories,
+        protein_g: newProtein,
+        carbs_g: newCarbs,
+        fat_g: newFat,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id,date" }
+    );
+
+    setDailyStats((prev) =>
+      prev
+        ? {
+            ...prev,
+            calories: newCalories,
+            protein_g: newProtein,
+            carbs_g: newCarbs,
+            fat_g: newFat,
+          }
+        : prev
     );
   };
 
@@ -267,37 +290,32 @@ export default function NutritionPage() {
             </Reveal>
           )}
 
-          <Card className="border-border/50 bg-card/50">
-            <CardContent className="p-4 space-y-3">
-              <Label>{t("nutrition.logCalories")}</Label>
-              <div className="flex gap-2">
-                <Input
-                  type="number"
-                  placeholder="e.g. 2200"
-                  value={calories}
-                  onChange={(e) => setCalories(e.target.value)}
-                  className="h-12 bg-background/50"
+          <MealAnalyzer onSave={saveMealData} />
+
+          {adjustedCalories > 0 && (dailyStats?.calories || 0) > 0 && (
+            <Card className="border-border/50 bg-card/50">
+              <CardContent className="p-4 space-y-2">
+                <Progress
+                  value={Math.min(
+                    ((dailyStats?.calories || 0) / adjustedCalories) * 100,
+                    100
+                  )}
+                  className="h-2"
                 />
-                <Button onClick={logCalories} className="h-12 px-6">
-                  {t("nutrition.save")}
-                </Button>
-              </div>
-              {adjustedCalories > 0 && calories && (
-                <>
-                  <Progress
-                    value={Math.min(
-                      (parseFloat(calories) / adjustedCalories) * 100,
-                      100
-                    )}
-                    className="h-2"
-                  />
-                  <p className="text-xs text-muted-foreground text-center">
-                    {calories} / {adjustedCalories} kcal
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>{dailyStats?.calories || 0} kcal</span>
+                  <span>{adjustedCalories} kcal {t("nutrition.target").toLowerCase()}</span>
+                </div>
+                {(dailyStats?.protein_g || 0) > 0 && (
+                  <div className="flex gap-4 text-xs text-muted-foreground justify-center pt-1">
+                    <span>P: {dailyStats?.protein_g || 0}g</span>
+                    <span>C: {dailyStats?.carbs_g || 0}g</span>
+                    <span>F: {dailyStats?.fat_g || 0}g</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* Water Tab */}
