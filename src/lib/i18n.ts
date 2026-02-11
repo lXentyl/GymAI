@@ -171,6 +171,18 @@ const translations: Record<Language, Record<string, string>> = {
         "error.retry": "Retry",
         "toast.workoutGenerated": "Workout generated!",
         "toast.error": "Something went wrong",
+
+        // --- Focus Mode ---
+        "workouts.focusMode": "Focus Mode",
+        "workouts.lastTime": "Last time",
+        "workouts.weight": "Weight",
+        "workouts.previous": "Previous",
+        "workouts.next": "Next",
+        "workouts.finishWorkout": "Finish Workout",
+        "workouts.complete": "Workout Complete!",
+        "workouts.progressSaved": "Great job! Your progress has been saved.",
+        "workouts.backToDashboard": "Back to Dashboard",
+        "workouts.totalCompleted": "completed",
     },
     es: {
         // --- Greetings ---
@@ -340,6 +352,18 @@ const translations: Record<Language, Record<string, string>> = {
         "error.retry": "Reintentar",
         "toast.workoutGenerated": "¡Entreno generado!",
         "toast.error": "Algo salió mal",
+
+        // --- Focus Mode ---
+        "workouts.focusMode": "Modo Enfoque",
+        "workouts.lastTime": "Última vez",
+        "workouts.weight": "Peso",
+        "workouts.previous": "Anterior",
+        "workouts.next": "Siguiente",
+        "workouts.finishWorkout": "Finalizar Entreno",
+        "workouts.complete": "¡Entreno Completado!",
+        "workouts.progressSaved": "¡Excelente! Tu progreso ha sido guardado.",
+        "workouts.backToDashboard": "Volver al Inicio",
+        "workouts.totalCompleted": "completados",
     },
 };
 

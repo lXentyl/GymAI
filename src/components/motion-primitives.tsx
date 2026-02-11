@@ -35,12 +35,13 @@ export const MotionCard = forwardRef<HTMLDivElement, MotionCardProps>(
         <motion.div
             ref={ref}
             whileHover={{
-                y: -2,
+                y: -4,
                 transition: { duration: 0.2 },
             }}
             className={cn(
                 glow &&
-                    "hover:shadow-[0_0_15px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_0_15px_rgba(255,255,255,0.05)]",
+                    "hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,255,255,0.08)]",
+                "transition-shadow duration-300",
                 className
             )}
             {...props}

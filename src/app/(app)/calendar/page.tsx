@@ -351,7 +351,7 @@ export default function CalendarPage() {
 
       {/* Add Event Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md glass-strong border-border/30">
           <DialogHeader>
             <DialogTitle>{t("calendar.addEvent")}</DialogTitle>
             <DialogDescription>
@@ -362,6 +362,34 @@ export default function CalendarPage() {
               })}
             </DialogDescription>
           </DialogHeader>
+
+          {/* Day Summary — show existing event details */}
+          {selectedDate && events.find((e) => e.date === selectedDate.toISOString().split("T")[0]) && (
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-xl bg-foreground/5 p-3 space-y-1"
+            >
+              {(() => {
+                const ev = events.find((e) => e.date === selectedDate.toISOString().split("T")[0])!;
+                const config = EVENT_CONFIG[ev.event_type as CalendarEventType];
+                const Icon = config.icon;
+                return (
+                  <div className="flex items-center gap-3">
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl border ${config.bg}`}>
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm capitalize">{t(`calendar.${ev.event_type}`)}</p>
+                      {ev.muscle_group && (
+                        <p className="text-xs text-muted-foreground capitalize">{t(`calendar.${ev.muscle_group}`)}</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+            </motion.div>
+          )}
 
           <div className="space-y-5 py-2">
             {/* Event Type Selector */}

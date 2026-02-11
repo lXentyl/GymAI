@@ -1,21 +1,30 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PerformanceArrow from "@/components/performance-arrow";
+import RestTimer from "@/components/rest-timer";
+import AnimatedNumber from "@/components/animated-number";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Loader2,
   ChevronLeft,
+  ChevronRight,
   RefreshCw,
   Check,
   Timer,
+  ArrowLeft,
+  ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
 import { type WorkoutPlanExercise, type WorkoutLog, type Exercise } from "@/lib/types";
-import { getSubstitute, filterByEquipment } from "@/lib/ai-trainer";
+import { getSubstitute } from "@/lib/ai-trainer";
+import { useTranslation } from "@/lib/i18n";
+import { useSettings } from "@/lib/settings-store";
+import { formatWeight } from "@/lib/unit-converter";
 
 interface SetEntry {
   weight: string;
@@ -40,9 +49,15 @@ export default function WorkoutSessionPage({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [showTimer, setShowTimer] = useState(false);
+  const [direction, setDirection] = useState(1);
+  const { t } = useTranslation();
+  const units = useSettings((s) => s.units);
 
   useEffect(() => {
     loadWorkout();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const loadWorkout = async () => {
@@ -77,7 +92,6 @@ export default function WorkoutSessionPage({
       .gte("completed_at", oneWeekAgo.toISOString())
       .order("completed_at", { ascending: false });
 
-    // Build exercise list with previous data
     const exerciseData: ExerciseWithSets[] = planExercises.map((pe) => {
       const prevLog = previousLogs?.find(
         (log) => log.exercise_id === pe.exercise_id
@@ -120,6 +134,9 @@ export default function WorkoutSessionPage({
   };
 
   const toggleSetComplete = (exerciseIndex: number, setIndex: number) => {
+    const set = exercises[exerciseIndex].sets[setIndex];
+    const wasComplete = set.completed;
+
     setExercises((prev) => {
       const updated = [...prev];
       updated[exerciseIndex] = {
@@ -130,6 +147,11 @@ export default function WorkoutSessionPage({
       };
       return updated;
     });
+
+    // Auto-trigger rest timer when completing a set
+    if (!wasComplete && set.weight && set.reps) {
+      setShowTimer(true);
+    }
   };
 
   const swapExercise = async (exerciseIndex: number) => {
@@ -174,6 +196,11 @@ export default function WorkoutSessionPage({
     }
   };
 
+  const goToExercise = (idx: number) => {
+    setDirection(idx > currentIndex ? 1 : -1);
+    setCurrentIndex(idx);
+  };
+
   const saveWorkout = async () => {
     setSaving(true);
     const supabase = createClient();
@@ -200,7 +227,6 @@ export default function WorkoutSessionPage({
       await supabase.from("workout_logs").insert(logs);
     }
 
-    // Update streak (increment directly)
     try {
       const { data: currentProfile } = await supabase
         .from("profiles")
@@ -230,6 +256,9 @@ export default function WorkoutSessionPage({
     setSaving(false);
   };
 
+  const handleTimerComplete = useCallback(() => setShowTimer(false), []);
+  const handleTimerSkip = useCallback(() => setShowTimer(false), []);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -240,162 +269,306 @@ export default function WorkoutSessionPage({
 
   if (completed) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 space-y-4 text-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10">
-          <Check className="h-10 w-10 text-emerald-400" />
-        </div>
-        <h2 className="text-2xl font-bold">Workout Complete! 💪</h2>
-        <p className="text-muted-foreground">
-          Great job! Your progress has been saved.
-        </p>
-        <Link href="/dashboard">
-          <Button className="mt-4">Back to Dashboard</Button>
-        </Link>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="flex flex-col items-center justify-center py-20 space-y-4 text-center"
+      >
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+          className="flex h-24 w-24 items-center justify-center rounded-full bg-emerald-500/10"
+        >
+          <Check className="h-12 w-12 text-emerald-400" />
+        </motion.div>
+        <motion.h2
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="text-2xl font-bold"
+        >
+          {t("workouts.complete")} 💪
+        </motion.h2>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="text-muted-foreground"
+        >
+          {t("workouts.progressSaved")}
+        </motion.p>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+        >
+          <Link href="/dashboard">
+            <Button className="mt-4">{t("workouts.backToDashboard")}</Button>
+          </Link>
+        </motion.div>
+      </motion.div>
     );
   }
 
+  const currentEx = exercises[currentIndex];
+  if (!currentEx) return null;
+
+  const completedSets = currentEx.sets.filter((s) => s.completed).length;
+  const totalSets = currentEx.sets.length;
+  const totalCompletedSets = exercises.reduce(
+    (acc, ex) => acc + ex.sets.filter((s) => s.completed).length,
+    0
+  );
+  const totalTotalSets = exercises.reduce(
+    (acc, ex) => acc + ex.sets.length,
+    0
+  );
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <Link href="/workouts">
-          <Button variant="ghost" size="icon" className="h-10 w-10">
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-xl font-bold">Active Workout</h1>
+    <>
+      {/* Rest Timer Overlay */}
+      <RestTimer
+        seconds={currentEx.planExercise.rest_seconds || 90}
+        active={showTimer}
+        onComplete={handleTimerComplete}
+        onSkip={handleTimerSkip}
+      />
+
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <Link href="/workouts">
+            <Button variant="ghost" size="icon" className="h-10 w-10">
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium">
+              {t("workouts.focusMode")}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {currentIndex + 1} / {exercises.length}
+            </p>
+          </div>
+          <div className="w-10" />
+        </div>
+
+        {/* Progress bar */}
+        <div className="flex gap-1">
+          {exercises.map((_, i) => (
+            <motion.button
+              key={i}
+              onClick={() => goToExercise(i)}
+              className={`h-1.5 flex-1 rounded-full transition-colors ${
+                i < currentIndex
+                  ? "bg-foreground"
+                  : i === currentIndex
+                  ? "bg-foreground/60"
+                  : "bg-foreground/15"
+              }`}
+              whileTap={{ scale: 0.95 }}
+            />
+          ))}
+        </div>
+
+        {/* Current Exercise - Focus View */}
+        <AnimatePresence mode="wait" custom={direction}>
+          <motion.div
+            key={currentIndex}
+            custom={direction}
+            initial={{ opacity: 0, x: direction * 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -direction * 50 }}
+            transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+            className="space-y-4"
+          >
+            {/* Exercise Name & Info */}
+            <Card className="border-border/50 bg-card/50">
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold">{currentEx.exercise.name}</h2>
+                    <p className="text-sm text-muted-foreground capitalize">
+                      {currentEx.exercise.muscle_group} • {currentEx.exercise.equipment_required}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => swapExercise(currentIndex)}
+                    className="h-9 text-xs"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                    Swap
+                  </Button>
+                </div>
+
+                {/* Previous Performance */}
+                {currentEx.previousBest && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="flex items-center gap-2 rounded-xl bg-foreground/5 px-4 py-3 mt-3"
+                  >
+                    <Timer className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">
+                      {t("workouts.lastTime")}:{" "}
+                      <span className="font-semibold text-foreground">
+                        {formatWeight(currentEx.previousBest.weight, units)} × {currentEx.previousBest.reps}
+                      </span>
+                    </span>
+                  </motion.div>
+                )}
+
+                {/* Sets Progress */}
+                <div className="flex items-center gap-2 mt-3">
+                  <p className="text-xs text-muted-foreground">
+                    {completedSets}/{totalSets} sets
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Sets — Large Inputs */}
+            <div className="space-y-3">
+              {currentEx.sets.map((set, setIdx) => {
+                const currentVolume =
+                  parseFloat(set.weight || "0") * parseInt(set.reps || "0");
+                const previousVolume = currentEx.previousBest
+                  ? currentEx.previousBest.weight * currentEx.previousBest.reps
+                  : 0;
+
+                return (
+                  <motion.div
+                    key={setIdx}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: setIdx * 0.05 }}
+                  >
+                    <Card className={`border-border/50 transition-all ${
+                      set.completed ? "bg-foreground/5 opacity-60" : "bg-card/50"
+                    }`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                          {/* Set Number */}
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-foreground/10 shrink-0">
+                            <span className="text-sm font-bold">{setIdx + 1}</span>
+                          </div>
+
+                          {/* Weight Input */}
+                          <div className="flex-1 space-y-1">
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                              {t("workouts.weight")}
+                            </p>
+                            <Input
+                              type="number"
+                              inputMode="decimal"
+                              placeholder="0"
+                              value={set.weight}
+                              onChange={(e) =>
+                                updateSet(currentIndex, setIdx, "weight", e.target.value)
+                              }
+                              className="h-14 bg-background/50 text-center text-xl font-bold"
+                              disabled={set.completed}
+                            />
+                          </div>
+
+                          {/* Reps Input */}
+                          <div className="flex-1 space-y-1">
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                              Reps
+                            </p>
+                            <div className="relative">
+                              <Input
+                                type="number"
+                                inputMode="numeric"
+                                placeholder="0"
+                                value={set.reps}
+                                onChange={(e) =>
+                                  updateSet(currentIndex, setIdx, "reps", e.target.value)
+                                }
+                                className="h-14 bg-background/50 text-center text-xl font-bold"
+                                disabled={set.completed}
+                              />
+                              {set.weight && set.reps && currentVolume > 0 && (
+                                <div className="absolute -top-2 -right-2">
+                                  <PerformanceArrow
+                                    current={currentVolume}
+                                    previous={previousVolume}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Complete Button */}
+                          <motion.button
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => toggleSetComplete(currentIndex, setIdx)}
+                            className={`flex h-14 w-14 items-center justify-center rounded-xl border-2 transition-all shrink-0 ${
+                              set.completed
+                                ? "border-emerald-500 bg-emerald-500/20 text-emerald-400"
+                                : "border-border hover:border-foreground/30"
+                            }`}
+                          >
+                            <Check className="h-6 w-6" />
+                          </motion.button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Navigation */}
+        <div className="flex gap-3 pt-2">
+          {currentIndex > 0 && (
+            <Button
+              variant="outline"
+              className="flex-1 h-14"
+              onClick={() => goToExercise(currentIndex - 1)}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              {t("workouts.previous")}
+            </Button>
+          )}
+          {currentIndex < exercises.length - 1 ? (
+            <Button
+              className="flex-1 h-14 font-bold"
+              onClick={() => goToExercise(currentIndex + 1)}
+            >
+              {t("workouts.next")}
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          ) : (
+            <Button
+              className="flex-1 h-14 text-lg font-bold"
+              onClick={saveWorkout}
+              disabled={saving}
+            >
+              {saving ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <>
+                  {t("workouts.finishWorkout")} ✅
+                </>
+              )}
+            </Button>
+          )}
+        </div>
+
+        {/* Global Progress */}
+        <div className="text-center pb-4">
           <p className="text-xs text-muted-foreground">
-            {exercises.length} exercises
+            {totalCompletedSets}/{totalTotalSets} sets {t("workouts.totalCompleted")}
           </p>
         </div>
       </div>
-
-      {/* Exercises */}
-      <div className="space-y-4">
-        {exercises.map((ex, exIdx) => (
-          <Card key={exIdx} className="border-border/50 bg-card/50">
-            <CardContent className="p-4 space-y-3">
-              {/* Exercise Header */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-semibold">{ex.exercise.name}</p>
-                  <p className="text-xs text-muted-foreground capitalize">
-                    {ex.exercise.muscle_group} •{" "}
-                    {ex.exercise.equipment_required}
-                  </p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => swapExercise(exIdx)}
-                  className="h-8 text-xs"
-                >
-                  <RefreshCw className="h-3 w-3 mr-1" />
-                  Swap
-                </Button>
-              </div>
-
-              {/* Previous Performance */}
-              {ex.previousBest && (
-                <div className="flex items-center gap-2 rounded-lg bg-foreground/5 px-3 py-2">
-                  <Timer className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">
-                    Last week: {ex.previousBest.weight}kg ×{" "}
-                    {ex.previousBest.reps} reps
-                  </span>
-                </div>
-              )}
-
-              {/* Sets */}
-              <div className="space-y-2">
-                <div className="grid grid-cols-[2rem_1fr_1fr_2.5rem] gap-2 text-xs text-muted-foreground px-1">
-                  <span>Set</span>
-                  <span>Weight (kg)</span>
-                  <span>Reps</span>
-                  <span></span>
-                </div>
-
-                {ex.sets.map((set, setIdx) => {
-                  const currentVolume =
-                    parseFloat(set.weight || "0") *
-                    parseInt(set.reps || "0");
-                  const previousVolume = ex.previousBest
-                    ? ex.previousBest.weight * ex.previousBest.reps
-                    : 0;
-
-                  return (
-                    <div
-                      key={setIdx}
-                      className={`grid grid-cols-[2rem_1fr_1fr_2.5rem] gap-2 items-center ${
-                        set.completed ? "opacity-50" : ""
-                      }`}
-                    >
-                      <span className="text-center text-sm font-medium text-muted-foreground">
-                        {setIdx + 1}
-                      </span>
-                      <Input
-                        type="number"
-                        placeholder="0"
-                        value={set.weight}
-                        onChange={(e) =>
-                          updateSet(exIdx, setIdx, "weight", e.target.value)
-                        }
-                        className="h-11 bg-background/50 text-center text-base font-semibold"
-                        disabled={set.completed}
-                      />
-                      <div className="relative">
-                        <Input
-                          type="number"
-                          placeholder="0"
-                          value={set.reps}
-                          onChange={(e) =>
-                            updateSet(exIdx, setIdx, "reps", e.target.value)
-                          }
-                          className="h-11 bg-background/50 text-center text-base font-semibold"
-                          disabled={set.completed}
-                        />
-                        {set.weight && set.reps && currentVolume > 0 && (
-                          <div className="absolute -top-2 -right-2">
-                            <PerformanceArrow
-                              current={currentVolume}
-                              previous={previousVolume}
-                            />
-                          </div>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => toggleSetComplete(exIdx, setIdx)}
-                        className={`flex h-11 w-10 items-center justify-center rounded-lg border-2 transition-all ${
-                          set.completed
-                            ? "border-emerald-500 bg-emerald-500/20 text-emerald-400"
-                            : "border-border hover:border-foreground/30"
-                        }`}
-                      >
-                        <Check className="h-4 w-4" />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Save */}
-      <Button
-        className="w-full h-14 text-lg font-bold"
-        onClick={saveWorkout}
-        disabled={saving}
-      >
-        {saving ? (
-          <Loader2 className="h-5 w-5 animate-spin" />
-        ) : (
-          "Complete Workout ✅"
-        )}
-      </Button>
-    </div>
+    </>
   );
 }

@@ -24,7 +24,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/50 bg-background/80 backdrop-blur-xl">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/30 bg-background/60 backdrop-blur-2xl">
       <div className="mx-auto flex max-w-lg items-center justify-around py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]">
         {navItems.map((item) => {
           const isActive =

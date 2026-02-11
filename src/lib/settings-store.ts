@@ -16,7 +16,7 @@ interface SettingsState {
 export const useSettings = create<SettingsState>()(
     persist(
         (set) => ({
-            language: "en",
+            language: "es",
             units: "metric",
             setLanguage: (language) => set({ language }),
             setUnits: (units) => set({ units }),

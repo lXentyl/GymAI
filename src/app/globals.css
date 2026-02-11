@@ -161,3 +161,16 @@ input[type="text"] {
 .pb-safe {
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5rem);
 }
+
+/* Glassmorphism effects */
+.glass {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: hsl(var(--background) / 0.6);
+}
+
+.glass-strong {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  background: hsl(var(--background) / 0.75);
+}
