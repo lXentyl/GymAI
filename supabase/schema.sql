@@ -272,3 +272,23 @@ INSERT INTO public.exercises (name, muscle_group, secondary_muscles, equipment_r
 ('Cable Woodchops', 'core', ARRAY['obliques'], 'cables', 'intermediate', 'compound', 'Rotate torso while pulling cable diagonally.'),
 ('Hanging Leg Raises', 'core', ARRAY['hip_flexors'], 'bodyweight', 'advanced', 'isolation', 'Hang from bar, raise legs to parallel or higher.'),
 ('Crunches', 'core', ARRAY[]::TEXT[], 'bodyweight', 'beginner', 'isolation', 'Lie on back, curl shoulders off ground.');
+
+-- ============================================
+-- 11. CALENDAR EVENTS (workout planner)
+-- ============================================
+CREATE TABLE public.calendar_events (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  event_type TEXT NOT NULL CHECK (event_type IN ('workout', 'rest', 'missed')),
+  muscle_group TEXT,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, date)
+);
+
+ALTER TABLE public.calendar_events ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view own events" ON public.calendar_events FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own events" ON public.calendar_events FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own events" ON public.calendar_events FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own events" ON public.calendar_events FOR DELETE USING (auth.uid() = user_id);

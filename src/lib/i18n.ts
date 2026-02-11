@@ -76,6 +76,26 @@ const translations: Record<Language, Record<string, string>> = {
         "calendar.thu": "Thu",
         "calendar.fri": "Fri",
         "calendar.sat": "Sat",
+        "calendar.addEvent": "Log Day",
+        "calendar.workout": "Workout",
+        "calendar.rest": "Rest",
+        "calendar.missed": "Missed",
+        "calendar.selectMuscle": "Muscle Group",
+        "calendar.save": "Save",
+        "calendar.delete": "Remove",
+        "calendar.eventSaved": "Day logged successfully",
+        "calendar.eventDeleted": "Day log removed",
+        "calendar.trainedThisWeek": "You trained {count} days this week",
+        "calendar.noEvents": "Tap a date to log your day",
+        "calendar.chest": "Chest",
+        "calendar.back": "Back",
+        "calendar.shoulders": "Shoulders",
+        "calendar.legs": "Legs",
+        "calendar.arms": "Arms",
+        "calendar.core": "Core",
+        "calendar.push": "Push",
+        "calendar.pull": "Pull",
+        "calendar.fullBody": "Full Body",
 
         // --- Progress ---
         "progress.title": "Progress",
@@ -123,7 +143,7 @@ const translations: Record<Language, Record<string, string>> = {
         "auth.minChars": "Min. 6 characters",
         "auth.haveAccount": "Already have an account?",
         "auth.signInLink": "Sign in",
-        "auth.passwordMinError": "La contraseña debe tener al menos 6 caracteres",
+        "auth.passwordMinError": "Password must be at least 6 characters",
 
         // --- Settings ---
         "settings.title": "Settings",
@@ -144,6 +164,13 @@ const translations: Record<Language, Record<string, string>> = {
         "general.loading": "Loading...",
         "general.notSet": "Not set",
         "footer.poweredBy": "Powered by",
+
+        // --- Error & Toast ---
+        "error.connectionFailed": "Connection Failed",
+        "error.tryAgain": "Something went wrong. Please check your connection and try again.",
+        "error.retry": "Retry",
+        "toast.workoutGenerated": "Workout generated!",
+        "toast.error": "Something went wrong",
     },
     es: {
         // --- Greetings ---
@@ -218,6 +245,26 @@ const translations: Record<Language, Record<string, string>> = {
         "calendar.thu": "Jue",
         "calendar.fri": "Vie",
         "calendar.sat": "Sáb",
+        "calendar.addEvent": "Registrar Día",
+        "calendar.workout": "Entreno",
+        "calendar.rest": "Descanso",
+        "calendar.missed": "Perdido",
+        "calendar.selectMuscle": "Grupo Muscular",
+        "calendar.save": "Guardar",
+        "calendar.delete": "Eliminar",
+        "calendar.eventSaved": "Día registrado exitosamente",
+        "calendar.eventDeleted": "Registro eliminado",
+        "calendar.trainedThisWeek": "Entrenaste {count} días esta semana",
+        "calendar.noEvents": "Toca una fecha para registrar tu día",
+        "calendar.chest": "Pecho",
+        "calendar.back": "Espalda",
+        "calendar.shoulders": "Hombros",
+        "calendar.legs": "Piernas",
+        "calendar.arms": "Brazos",
+        "calendar.core": "Core",
+        "calendar.push": "Empuje",
+        "calendar.pull": "Tirón",
+        "calendar.fullBody": "Cuerpo Completo",
 
         // --- Progress ---
         "progress.title": "Progreso",
@@ -286,6 +333,13 @@ const translations: Record<Language, Record<string, string>> = {
         "general.loading": "Cargando...",
         "general.notSet": "Sin definir",
         "footer.poweredBy": "Creado por",
+
+        // --- Error & Toast ---
+        "error.connectionFailed": "Conexión Fallida",
+        "error.tryAgain": "Algo salió mal. Verifica tu conexión e intenta de nuevo.",
+        "error.retry": "Reintentar",
+        "toast.workoutGenerated": "¡Entreno generado!",
+        "toast.error": "Algo salió mal",
     },
 };
 

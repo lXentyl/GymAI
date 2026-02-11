@@ -137,3 +137,16 @@ export interface TDEEResult {
     carbs_g: number;
     fat_g: number;
 }
+
+// Calendar events
+export type CalendarEventType = "workout" | "rest" | "missed";
+
+export interface CalendarEvent {
+    id: string;
+    user_id: string;
+    date: string;
+    event_type: CalendarEventType;
+    muscle_group: string | null;
+    notes: string | null;
+    created_at: string;
+}

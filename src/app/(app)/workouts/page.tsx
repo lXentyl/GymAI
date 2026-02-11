@@ -13,6 +13,7 @@ import { formatWeight } from "@/lib/unit-converter";
 import { Dumbbell, Loader2, ChevronRight } from "lucide-react";
 import { type Profile, type Exercise, type WorkoutPlan } from "@/lib/types";
 import { generateWorkout, getDayMuscleGroups } from "@/lib/ai-trainer";
+import { toast } from "sonner";
 
 export default function WorkoutsPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -46,7 +47,7 @@ export default function WorkoutsPage() {
           .eq("user_id", user.id)
           .order("created_at", { ascending: false })
           .limit(1)
-          .single(),
+          .maybeSingle(),
       ]);
 
     if (profileData) setProfile(profileData);
@@ -94,7 +95,10 @@ export default function WorkoutsPage() {
       .select()
       .single();
 
-    if (data) setCurrentPlan(data);
+    if (data) {
+      setCurrentPlan(data);
+      toast.success(t("toast.workoutGenerated"));
+    }
     setGenerating(false);
   };
 
@@ -196,27 +200,34 @@ export default function WorkoutsPage() {
         </Reveal>
       ) : (
         <Reveal delay={0.2}>
-          <Card className="border-border/50 bg-card/50">
-            <CardContent className="p-8 text-center space-y-3">
-              <Dumbbell className="h-10 w-10 mx-auto text-muted-foreground" />
-              <p className="font-semibold">{t("workouts.noWorkouts")}</p>
-              <p className="text-sm text-muted-foreground">
-                {t("workouts.noWorkouts.sub")}
-              </p>
-              <Button
-                onClick={handleGenerate}
-                disabled={generating || exercises.length === 0}
-                className="mt-2"
-              >
-                {generating ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <Dumbbell className="h-4 w-4 mr-2" />
-                )}
-                {t("workouts.generateWorkout")}
-              </Button>
-            </CardContent>
-          </Card>
+          <MotionCard glow>
+            <Card className="border-border/50 bg-card/50 border-dashed">
+              <CardContent className="p-10 text-center space-y-4">
+                <div className="flex h-16 w-16 mx-auto items-center justify-center rounded-2xl bg-foreground/5">
+                  <Dumbbell className="h-8 w-8 text-muted-foreground animate-pulse" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-semibold text-lg">{t("workouts.noWorkouts")}</p>
+                  <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                    {t("workouts.noWorkouts.sub")}
+                  </p>
+                </div>
+                <Button
+                  onClick={handleGenerate}
+                  disabled={generating || exercises.length === 0}
+                  size="lg"
+                  className="mt-2 gap-2"
+                >
+                  {generating ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Dumbbell className="h-4 w-4" />
+                  )}
+                  {t("workouts.generateWorkout")}
+                </Button>
+              </CardContent>
+            </Card>
+          </MotionCard>
         </Reveal>
       )}
     </div>
