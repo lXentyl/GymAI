@@ -77,16 +77,16 @@ export default function WorkoutsPage() {
     const plan = {
       user_id: profile.id,
       name: `${muscleGroups.join(" / ")} Day`,
+      split_type: "push_pull_legs" as const,
       exercises: workout.map((w) => ({
         exercise_id: w.exercise.id,
         name: w.exercise.name,
         sets: w.sets,
         reps: w.reps,
         rest_seconds: w.rest,
-        equipment: w.exercise.equipment,
+        equipment: w.exercise.equipment_required,
         muscle_group: w.exercise.muscle_group,
       })),
-      created_at: new Date().toISOString(),
     };
 
     const { data } = await supabase
