@@ -33,7 +33,7 @@ export function calculateTDEE(
  * Calculate daily water intake target in ml
  */
 export function calculateWaterTarget(weightKg: number): number {
-    return Math.round(weightKg * 30); // 30ml per kg
+    return Math.round(weightKg * 35); // 35ml per kg
 }
 
 /**

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslation } from "@/lib/i18n";
 import {
   LayoutDashboard,
   Dumbbell,
@@ -10,16 +11,17 @@ import {
   User,
 } from "lucide-react";
 
-const navItems = [
-  { href: "/dashboard", label: "Home", icon: LayoutDashboard },
-  { href: "/workouts", label: "Workout", icon: Dumbbell },
-  { href: "/nutrition", label: "Nutrition", icon: Apple },
-  { href: "/calendar", label: "Calendar", icon: CalendarDays },
-  { href: "/profile", label: "Profile", icon: User },
-];
-
 export default function BottomNav() {
   const pathname = usePathname();
+  const { t } = useTranslation();
+
+  const navItems = [
+    { href: "/dashboard", label: t("nav.home"), icon: LayoutDashboard },
+    { href: "/workouts", label: t("nav.workout"), icon: Dumbbell },
+    { href: "/nutrition", label: t("nav.nutrition"), icon: Apple },
+    { href: "/calendar", label: t("nav.calendar"), icon: CalendarDays },
+    { href: "/profile", label: t("nav.profile"), icon: User },
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/50 bg-background/80 backdrop-blur-xl">

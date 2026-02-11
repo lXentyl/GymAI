@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { translateAuthError } from "@/lib/auth-errors";
+import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,7 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { t } = useTranslation();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +29,7 @@ export default function RegisterPage() {
     setError("");
 
     if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres");
+      setError(t("auth.passwordMinError"));
       setLoading(false);
       return;
     }
@@ -90,9 +92,11 @@ export default function RegisterPage() {
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-foreground">
             <Dumbbell className="h-7 w-7 text-background" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Join GymAI</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {t("auth.joinGymAI")}
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Start your fitness journey today
+            {t("auth.startJourney")}
           </p>
         </div>
       </Reveal>
@@ -101,13 +105,13 @@ export default function RegisterPage() {
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardHeader className="pb-4">
             <h2 className="text-lg font-semibold text-center">
-              Create Account
+              {t("auth.createAccount")}
             </h2>
           </CardHeader>
           <CardContent className="space-y-4">
             <form onSubmit={handleRegister} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">{t("auth.fullName")}</Label>
                 <Input
                   id="name"
                   type="text"
@@ -120,7 +124,7 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t("auth.email")}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -133,12 +137,12 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t("auth.password")}</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Min. 6 characters"
+                    placeholder={t("auth.minChars")}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -170,18 +174,18 @@ export default function RegisterPage() {
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  "Create Account"
+                  t("auth.createAccount")
                 )}
               </Button>
             </form>
 
             <p className="text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
+              {t("auth.haveAccount")}{" "}
               <Link
                 href="/login"
                 className="text-foreground underline-offset-4 hover:underline font-medium"
               >
-                Sign in
+                {t("auth.signInLink")}
               </Link>
             </p>
           </CardContent>

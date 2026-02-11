@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { translateAuthError } from "@/lib/auth-errors";
+import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +20,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { t } = useTranslation();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,9 +66,11 @@ export default function LoginPage() {
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-foreground">
             <Dumbbell className="h-7 w-7 text-background" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">GymAI</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {t("auth.gymAI")}
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Your AI-powered fitness companion
+            {t("auth.tagline")}
           </p>
         </div>
       </Reveal>
@@ -74,12 +78,14 @@ export default function LoginPage() {
       <Reveal delay={0.15}>
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardHeader className="pb-4">
-            <h2 className="text-lg font-semibold text-center">Welcome Back</h2>
+            <h2 className="text-lg font-semibold text-center">
+              {t("auth.welcomeBack")}
+            </h2>
           </CardHeader>
           <CardContent className="space-y-4">
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t("auth.email")}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -92,7 +98,7 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t("auth.password")}</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -129,7 +135,7 @@ export default function LoginPage() {
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  "Sign In"
+                  t("auth.signIn")
                 )}
               </Button>
             </form>
@@ -139,7 +145,9 @@ export default function LoginPage() {
                 <div className="w-full border-t border-border/50" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-card px-2 text-muted-foreground">or</span>
+                <span className="bg-card px-2 text-muted-foreground">
+                  {t("auth.or")}
+                </span>
               </div>
             </div>
 
@@ -166,16 +174,16 @@ export default function LoginPage() {
                   fill="#EA4335"
                 />
               </svg>
-              Continue with Google
+              {t("auth.continueGoogle")}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">
-              Don&apos;t have an account?{" "}
+              {t("auth.noAccount")}{" "}
               <Link
                 href="/register"
                 className="text-foreground underline-offset-4 hover:underline font-medium"
               >
-                Sign up
+                {t("auth.signUp")}
               </Link>
             </p>
           </CardContent>

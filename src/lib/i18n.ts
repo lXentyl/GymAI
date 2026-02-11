@@ -1,0 +1,306 @@
+"use client";
+
+import { useSettings, type Language } from "./settings-store";
+
+const translations: Record<Language, Record<string, string>> = {
+    en: {
+        // --- Greetings ---
+        "greeting.morning": "Good Morning",
+        "greeting.afternoon": "Good Afternoon",
+        "greeting.evening": "Good Evening",
+
+        // --- Navbar ---
+        "nav.home": "Home",
+        "nav.workout": "Workout",
+        "nav.nutrition": "Nutrition",
+        "nav.calendar": "Calendar",
+        "nav.profile": "Profile",
+
+        // --- Dashboard ---
+        "dashboard.streak": "Current Streak",
+        "dashboard.best": "Best",
+        "dashboard.days": "days",
+        "dashboard.startWorkout": "Start Workout",
+        "dashboard.startWorkout.sub": "AI-generated based on your goals",
+        "dashboard.thisWeek": "This Week",
+        "dashboard.workouts": "workouts",
+        "dashboard.goal": "Goal",
+        "dashboard.hydration": "Hydration",
+        "dashboard.addGlass": "Add Glass",
+        "dashboard.dailyTargets": "Daily Targets",
+        "dashboard.calories": "Calories",
+        "dashboard.protein": "Protein",
+        "dashboard.carbs": "Carbs",
+        "dashboard.fats": "Fats",
+
+        // --- Workouts ---
+        "workouts.title": "Workouts",
+        "workouts.subtitle": "AI-generated for your goals",
+        "workouts.generate": "Generate",
+        "workouts.noWorkouts": "No workouts yet",
+        "workouts.noWorkouts.sub": "Generate your first AI-powered workout",
+        "workouts.generateWorkout": "Generate Workout",
+        "workouts.todaysFocus": "Today's Focus",
+        "workouts.rest": "rest",
+
+        // --- Nutrition ---
+        "nutrition.title": "Nutrition",
+        "nutrition.subtitle": "Track your daily intake",
+        "nutrition.calories": "Calories",
+        "nutrition.water": "Water",
+        "nutrition.supps": "Supps",
+        "nutrition.tdeeSummary": "TDEE Summary",
+        "nutrition.bmr": "BMR",
+        "nutrition.target": "Target",
+        "nutrition.protein": "Protein",
+        "nutrition.carbs": "Carbs",
+        "nutrition.logCalories": "Log Calories Today",
+        "nutrition.save": "Save",
+        "nutrition.ofTarget": "of {target} target",
+        "nutrition.addSupplement": "Add Supplement",
+        "nutrition.name": "Name",
+        "nutrition.dosage": "Dosage",
+        "nutrition.noSupplements": "No supplements added yet",
+
+        // --- Calendar ---
+        "calendar.title": "Calendar",
+        "calendar.subtitle": "Your training history",
+        "calendar.dayStreak": "Day Streak",
+        "calendar.ofDays": "of {days} days",
+        "calendar.workoutCompleted": "Workout completed",
+        "calendar.today": "Today",
+        "calendar.sun": "Sun",
+        "calendar.mon": "Mon",
+        "calendar.tue": "Tue",
+        "calendar.wed": "Wed",
+        "calendar.thu": "Thu",
+        "calendar.fri": "Fri",
+        "calendar.sat": "Sat",
+
+        // --- Progress ---
+        "progress.title": "Progress",
+        "progress.subtitle": "Track your strength gains",
+        "progress.noData": "No data yet",
+        "progress.noData.sub": "Complete a workout to see your progress",
+        "progress.maxWeight": "Max Weight",
+        "progress.maxVolume": "Max Volume",
+        "progress.weightOverTime": "Weight Over Time",
+
+        // --- Profile ---
+        "profile.title": "Profile",
+        "profile.subtitle": "Manage your settings",
+        "profile.bodyStats": "Body Stats",
+        "profile.edit": "Edit",
+        "profile.save": "Save",
+        "profile.height": "Height",
+        "profile.weight": "Weight",
+        "profile.age": "Age",
+        "profile.gender": "Gender",
+        "profile.unit": "Unit",
+        "profile.achievements": "Achievements",
+        "profile.currentStreak": "Current Streak",
+        "profile.bestStreak": "Best Streak",
+        "profile.equipment": "Equipment",
+        "profile.noEquipment": "No equipment saved",
+        "profile.signOut": "Sign Out",
+        "profile.settings": "Settings",
+
+        // --- Auth ---
+        "auth.gymAI": "GymAI",
+        "auth.tagline": "Your AI-powered fitness companion",
+        "auth.welcomeBack": "Welcome Back",
+        "auth.email": "Email",
+        "auth.password": "Password",
+        "auth.signIn": "Sign In",
+        "auth.or": "or",
+        "auth.continueGoogle": "Continue with Google",
+        "auth.noAccount": "Don't have an account?",
+        "auth.signUp": "Sign up",
+        "auth.joinGymAI": "Join GymAI",
+        "auth.startJourney": "Start your fitness journey today",
+        "auth.createAccount": "Create Account",
+        "auth.fullName": "Full Name",
+        "auth.minChars": "Min. 6 characters",
+        "auth.haveAccount": "Already have an account?",
+        "auth.signInLink": "Sign in",
+        "auth.passwordMinError": "La contraseña debe tener al menos 6 caracteres",
+
+        // --- Settings ---
+        "settings.title": "Settings",
+        "settings.subtitle": "Customize your experience",
+        "settings.appearance": "Appearance",
+        "settings.theme": "Theme",
+        "settings.system": "System",
+        "settings.dark": "Dark",
+        "settings.light": "Light",
+        "settings.language": "Language",
+        "settings.english": "English",
+        "settings.spanish": "Español",
+        "settings.units": "Units",
+        "settings.metric": "Metric (kg, cm)",
+        "settings.imperial": "Imperial (lbs, ft)",
+
+        // --- General ---
+        "general.loading": "Loading...",
+        "general.notSet": "Not set",
+        "footer.poweredBy": "Powered by",
+    },
+    es: {
+        // --- Greetings ---
+        "greeting.morning": "Buenos Días",
+        "greeting.afternoon": "Buenas Tardes",
+        "greeting.evening": "Buenas Noches",
+
+        // --- Navbar ---
+        "nav.home": "Inicio",
+        "nav.workout": "Entreno",
+        "nav.nutrition": "Nutrición",
+        "nav.calendar": "Calendario",
+        "nav.profile": "Perfil",
+
+        // --- Dashboard ---
+        "dashboard.streak": "Racha Actual",
+        "dashboard.best": "Mejor",
+        "dashboard.days": "días",
+        "dashboard.startWorkout": "Comenzar Entreno",
+        "dashboard.startWorkout.sub": "Generado por IA según tus objetivos",
+        "dashboard.thisWeek": "Esta Semana",
+        "dashboard.workouts": "entrenos",
+        "dashboard.goal": "Objetivo",
+        "dashboard.hydration": "Hidratación",
+        "dashboard.addGlass": "Añadir Vaso",
+        "dashboard.dailyTargets": "Objetivos Diarios",
+        "dashboard.calories": "Calorías",
+        "dashboard.protein": "Proteína",
+        "dashboard.carbs": "Carbos",
+        "dashboard.fats": "Grasas",
+
+        // --- Workouts ---
+        "workouts.title": "Entrenos",
+        "workouts.subtitle": "Generados por IA para tus objetivos",
+        "workouts.generate": "Generar",
+        "workouts.noWorkouts": "No hay entrenos aún",
+        "workouts.noWorkouts.sub": "Genera tu primer entreno con IA",
+        "workouts.generateWorkout": "Generar Entreno",
+        "workouts.todaysFocus": "Enfoque de Hoy",
+        "workouts.rest": "descanso",
+
+        // --- Nutrition ---
+        "nutrition.title": "Nutrición",
+        "nutrition.subtitle": "Registra tu consumo diario",
+        "nutrition.calories": "Calorías",
+        "nutrition.water": "Agua",
+        "nutrition.supps": "Supls",
+        "nutrition.tdeeSummary": "Resumen TDEE",
+        "nutrition.bmr": "TMB",
+        "nutrition.target": "Objetivo",
+        "nutrition.protein": "Proteína",
+        "nutrition.carbs": "Carbos",
+        "nutrition.logCalories": "Registrar Calorías Hoy",
+        "nutrition.save": "Guardar",
+        "nutrition.ofTarget": "de {target} objetivo",
+        "nutrition.addSupplement": "Añadir Suplemento",
+        "nutrition.name": "Nombre",
+        "nutrition.dosage": "Dosis",
+        "nutrition.noSupplements": "No hay suplementos añadidos",
+
+        // --- Calendar ---
+        "calendar.title": "Calendario",
+        "calendar.subtitle": "Tu historial de entreno",
+        "calendar.dayStreak": "Racha de Días",
+        "calendar.ofDays": "de {days} días",
+        "calendar.workoutCompleted": "Entreno completado",
+        "calendar.today": "Hoy",
+        "calendar.sun": "Dom",
+        "calendar.mon": "Lun",
+        "calendar.tue": "Mar",
+        "calendar.wed": "Mié",
+        "calendar.thu": "Jue",
+        "calendar.fri": "Vie",
+        "calendar.sat": "Sáb",
+
+        // --- Progress ---
+        "progress.title": "Progreso",
+        "progress.subtitle": "Registra tus ganancias de fuerza",
+        "progress.noData": "Sin datos aún",
+        "progress.noData.sub": "Completa un entreno para ver tu progreso",
+        "progress.maxWeight": "Peso Máximo",
+        "progress.maxVolume": "Volumen Máximo",
+        "progress.weightOverTime": "Peso en el Tiempo",
+
+        // --- Profile ---
+        "profile.title": "Perfil",
+        "profile.subtitle": "Administra tus ajustes",
+        "profile.bodyStats": "Medidas Corporales",
+        "profile.edit": "Editar",
+        "profile.save": "Guardar",
+        "profile.height": "Estatura",
+        "profile.weight": "Peso",
+        "profile.age": "Edad",
+        "profile.gender": "Género",
+        "profile.unit": "Unidad",
+        "profile.achievements": "Logros",
+        "profile.currentStreak": "Racha Actual",
+        "profile.bestStreak": "Mejor Racha",
+        "profile.equipment": "Equipamiento",
+        "profile.noEquipment": "Sin equipamiento guardado",
+        "profile.signOut": "Cerrar Sesión",
+        "profile.settings": "Ajustes",
+
+        // --- Auth ---
+        "auth.gymAI": "GymAI",
+        "auth.tagline": "Tu compañero fitness con IA",
+        "auth.welcomeBack": "Bienvenido de Vuelta",
+        "auth.email": "Correo Electrónico",
+        "auth.password": "Contraseña",
+        "auth.signIn": "Iniciar Sesión",
+        "auth.or": "o",
+        "auth.continueGoogle": "Continuar con Google",
+        "auth.noAccount": "¿No tienes cuenta?",
+        "auth.signUp": "Regístrate",
+        "auth.joinGymAI": "Únete a GymAI",
+        "auth.startJourney": "Comienza tu viaje fitness hoy",
+        "auth.createAccount": "Crear Cuenta",
+        "auth.fullName": "Nombre Completo",
+        "auth.minChars": "Mín. 6 caracteres",
+        "auth.haveAccount": "¿Ya tienes cuenta?",
+        "auth.signInLink": "Inicia sesión",
+        "auth.passwordMinError": "La contraseña debe tener al menos 6 caracteres",
+
+        // --- Settings ---
+        "settings.title": "Ajustes",
+        "settings.subtitle": "Personaliza tu experiencia",
+        "settings.appearance": "Apariencia",
+        "settings.theme": "Tema",
+        "settings.system": "Sistema",
+        "settings.dark": "Oscuro",
+        "settings.light": "Claro",
+        "settings.language": "Idioma",
+        "settings.english": "English",
+        "settings.spanish": "Español",
+        "settings.units": "Unidades",
+        "settings.metric": "Métrico (kg, cm)",
+        "settings.imperial": "Imperial (lbs, ft)",
+
+        // --- General ---
+        "general.loading": "Cargando...",
+        "general.notSet": "Sin definir",
+        "footer.poweredBy": "Creado por",
+    },
+};
+
+export function useTranslation() {
+    const language = useSettings((s) => s.language);
+
+    const t = (key: string, vars?: Record<string, string | number>): string => {
+        let text = translations[language]?.[key] || translations.en[key] || key;
+        if (vars) {
+            Object.entries(vars).forEach(([k, v]) => {
+                text = text.replace(`{${k}}`, String(v));
+            });
+        }
+        return text;
+    };
+
+    return { t, language };
+}

@@ -21,6 +21,7 @@ export interface Profile {
     unit_system: UnitSystem;
     current_streak: number;
     longest_streak: number;
+    equipment?: string[];
     onboarding_completed: boolean;
     created_at: string;
     updated_at: string;
@@ -40,6 +41,7 @@ export interface Exercise {
     muscle_group: string;
     secondary_muscles: string[];
     equipment_required: string;
+    equipment?: string;
     difficulty: Difficulty;
     exercise_type: ExerciseType;
     instructions: string | null;
@@ -53,6 +55,7 @@ export interface WorkoutPlan {
     split_type: SplitType;
     day_of_week: number | null;
     is_active: boolean;
+    exercises?: unknown;
     created_at: string;
 }
 

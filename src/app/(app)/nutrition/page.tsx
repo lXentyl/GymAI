@@ -9,12 +9,16 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
+import Reveal from "@/components/reveal";
+import { SkeletonPage } from "@/components/skeleton-card";
+import { useTranslation } from "@/lib/i18n";
+import { useSettings } from "@/lib/settings-store";
+import { formatWater } from "@/lib/unit-converter";
 import {
   Apple,
   Droplets,
   Pill,
   Plus,
-  Loader2,
   Trash2,
 } from "lucide-react";
 import { type Profile, type Supplement, type DailyStats } from "@/lib/types";
@@ -33,6 +37,8 @@ export default function NutritionPage() {
   const [newSupDosage, setNewSupDosage] = useState("");
   const [loading, setLoading] = useState(true);
   const [calories, setCalories] = useState("");
+  const { t } = useTranslation();
+  const units = useSettings((s) => s.units);
 
   useEffect(() => {
     loadData();
@@ -97,14 +103,14 @@ export default function NutritionPage() {
     );
   };
 
-  const addWater = async () => {
+  const addWater = async (amount: number = 250) => {
     const supabase = createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return;
 
-    const newAmount = (dailyStats?.water_ml || 0) + 250;
+    const newAmount = (dailyStats?.water_ml || 0) + amount;
     const today = new Date().toISOString().split("T")[0];
 
     await supabase.from("daily_stats").upsert(
@@ -188,72 +194,82 @@ export default function NutritionPage() {
     tdee && profile?.goal ? getCalorieAdjustment(profile.goal, tdee.tdee) : 0;
   const waterTarget = profile?.weight_kg
     ? calculateWaterTarget(profile.weight_kg)
-    : 2400;
+    : 2800;
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  if (loading) return <SkeletonPage />;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Nutrition</h1>
-        <p className="text-sm text-muted-foreground">
-          Track your daily intake
-        </p>
-      </div>
+      <Reveal delay={0}>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {t("nutrition.title")}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {t("nutrition.subtitle")}
+          </p>
+        </div>
+      </Reveal>
 
       <Tabs defaultValue="calories" className="w-full">
         <TabsList className="w-full grid grid-cols-3 h-11">
           <TabsTrigger value="calories" className="text-xs">
             <Apple className="h-3.5 w-3.5 mr-1" />
-            Calories
+            {t("nutrition.calories")}
           </TabsTrigger>
           <TabsTrigger value="water" className="text-xs">
             <Droplets className="h-3.5 w-3.5 mr-1" />
-            Water
+            {t("nutrition.water")}
           </TabsTrigger>
           <TabsTrigger value="supplements" className="text-xs">
             <Pill className="h-3.5 w-3.5 mr-1" />
-            Supps
+            {t("nutrition.supps")}
           </TabsTrigger>
         </TabsList>
 
         {/* Calories Tab */}
         <TabsContent value="calories" className="space-y-4 mt-4">
           {tdee && (
-            <Card className="border-border/50 bg-card/50">
-              <CardContent className="p-4 space-y-3">
-                <p className="text-sm font-semibold">TDEE Summary</p>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="text-xs text-muted-foreground">BMR</p>
-                    <p className="font-bold">{tdee.bmr} kcal</p>
+            <Reveal delay={0.1}>
+              <Card className="border-border/50 bg-card/50">
+                <CardContent className="p-4 space-y-3">
+                  <p className="text-sm font-semibold">
+                    {t("nutrition.tdeeSummary")}
+                  </p>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        {t("nutrition.bmr")}
+                      </p>
+                      <p className="font-bold">{tdee.bmr} kcal</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        {t("nutrition.target")}
+                      </p>
+                      <p className="font-bold">{adjustedCalories} kcal</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        {t("nutrition.protein")}
+                      </p>
+                      <p className="font-bold">{tdee.protein_g}g</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        {t("nutrition.carbs")}
+                      </p>
+                      <p className="font-bold">{tdee.carbs_g}g</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Target</p>
-                    <p className="font-bold">{adjustedCalories} kcal</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Protein</p>
-                    <p className="font-bold">{tdee.protein_g}g</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Carbs</p>
-                    <p className="font-bold">{tdee.carbs_g}g</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Reveal>
           )}
 
           <Card className="border-border/50 bg-card/50">
             <CardContent className="p-4 space-y-3">
-              <Label>Log Calories Today</Label>
+              <Label>{t("nutrition.logCalories")}</Label>
               <div className="flex gap-2">
                 <Input
                   type="number"
@@ -263,17 +279,22 @@ export default function NutritionPage() {
                   className="h-12 bg-background/50"
                 />
                 <Button onClick={logCalories} className="h-12 px-6">
-                  Save
+                  {t("nutrition.save")}
                 </Button>
               </div>
               {adjustedCalories > 0 && calories && (
-                <Progress
-                  value={Math.min(
-                    (parseFloat(calories) / adjustedCalories) * 100,
-                    100
-                  )}
-                  className="h-2"
-                />
+                <>
+                  <Progress
+                    value={Math.min(
+                      (parseFloat(calories) / adjustedCalories) * 100,
+                      100
+                    )}
+                    className="h-2"
+                  />
+                  <p className="text-xs text-muted-foreground text-center">
+                    {calories} / {adjustedCalories} kcal
+                  </p>
+                </>
               )}
             </CardContent>
           </Card>
@@ -286,11 +307,10 @@ export default function NutritionPage() {
               <Droplets className="h-10 w-10 mx-auto text-blue-400" />
               <div>
                 <p className="text-3xl font-black">
-                  {dailyStats?.water_ml || 0}
-                  <span className="text-lg text-muted-foreground ml-1">ml</span>
+                  {formatWater(dailyStats?.water_ml || 0, units)}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  of {waterTarget}ml target
+                  {t("nutrition.ofTarget", { target: formatWater(waterTarget, units) })}
                 </p>
               </div>
               <Progress
@@ -306,10 +326,10 @@ export default function NutritionPage() {
                     key={amount}
                     variant="outline"
                     className="h-12 min-w-[100px]"
-                    onClick={addWater}
+                    onClick={() => addWater(amount)}
                   >
                     <Plus className="h-4 w-4 mr-1" />
-                    {amount}ml
+                    {formatWater(amount, units)}
                   </Button>
                 ))}
               </div>
@@ -322,16 +342,18 @@ export default function NutritionPage() {
           {/* Add new supplement */}
           <Card className="border-border/50 bg-card/50">
             <CardContent className="p-4 space-y-3">
-              <p className="text-sm font-semibold">Add Supplement</p>
+              <p className="text-sm font-semibold">
+                {t("nutrition.addSupplement")}
+              </p>
               <div className="flex gap-2">
                 <Input
-                  placeholder="Name"
+                  placeholder={t("nutrition.name")}
                   value={newSupName}
                   onChange={(e) => setNewSupName(e.target.value)}
                   className="h-10 bg-background/50"
                 />
                 <Input
-                  placeholder="Dosage"
+                  placeholder={t("nutrition.dosage")}
                   value={newSupDosage}
                   onChange={(e) => setNewSupDosage(e.target.value)}
                   className="h-10 bg-background/50 w-24"
@@ -383,7 +405,7 @@ export default function NutritionPage() {
             ))}
             {supplements.length === 0 && (
               <p className="text-center text-sm text-muted-foreground py-8">
-                No supplements added yet
+                {t("nutrition.noSupplements")}
               </p>
             )}
           </div>
